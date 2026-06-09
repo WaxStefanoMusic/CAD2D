@@ -1,0 +1,15 @@
+# Dipendenze npm (si reinstallano con `npm install`)
+node_modules/
+
+# Output build (l'installer si rigenera con `npm run dist`)
+Installer/
+
+# Log e file temporanei
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Eventuali variabili d'ambiente locali (non committarle mai)
+.env
+.env.*

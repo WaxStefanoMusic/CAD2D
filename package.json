@@ -1,0 +1,55 @@
+{
+  "name": "cad2d",
+  "version": "1.0.0",
+  "description": "CAD 2D - applicazione di disegno tecnico 2D",
+  "main": "main.js",
+  "author": "Stefano",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "portable": "electron-builder --win portable",
+    "publish": "electron-builder --win nsis --publish always",
+    "clean-installer": "node -e \"const fs=require('fs'),p=require('path');for(const x of ['win-unpacked']){const d=p.join('Installer',x);if(fs.existsSync(d))fs.rmSync(d,{recursive:true,force:true});}for(const f of fs.readdirSync('Installer')){if(/\\.(blockmap|yml)$/.test(f))fs.unlinkSync(p.join('Installer',f));}\"",
+    "release": "npm run publish && npm run clean-installer"
+  },
+  "build": {
+    "appId": "com.mattew.cad2d",
+    "productName": "CAD 2D",
+    "directories": {
+      "output": "Installer",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "renderer/**"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "requestedExecutionLevel": "requireAdministrator",
+      "artifactName": "CAD-2D-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CAD 2D"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "WaxStefanoMusic",
+      "repo": "CAD2D-releases"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
