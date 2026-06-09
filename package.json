@@ -42,7 +42,8 @@
     "publish": {
       "provider": "github",
       "owner": "WaxStefanoMusic",
-      "repo": "CAD2D-releases"
+      "repo": "CAD2D-releases",
+      "releaseType": "release"
     }
   },
   "devDependencies": {
