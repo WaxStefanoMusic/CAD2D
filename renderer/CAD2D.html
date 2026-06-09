@@ -348,6 +348,48 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',Consolas,m
   transition:all .12s;flex-shrink:0;margin-left:4px;font-family:inherit;
 }
 #btn-add-layout:hover{background:var(--bg3);color:var(--text);border-color:var(--border);}
+
+/* ── MENU BAR (File / Visualizza / Aggiornamenti) ── */
+#menubar{height:26px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 6px;gap:2px;flex-shrink:0;user-select:none;
+  font-family:'Courier New',Consolas,monospace;}
+.menubtn{background:transparent;border:1px solid transparent;color:var(--text);
+  padding:3px 12px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;
+  transition:background .1s;}
+.menubtn:hover,.menubtn.open{background:var(--bg3);}
+.menudrop{position:fixed;background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;box-shadow:0 8px 28px #000d;padding:4px 0;min-width:220px;
+  z-index:1000;display:none;font-family:'Courier New',Consolas,monospace;font-size:12px;}
+.menudrop.show{display:block;}
+.menuitem{padding:7px 16px;cursor:pointer;color:var(--text);display:flex;align-items:center;
+  gap:10px;white-space:nowrap;}
+.menuitem:hover{background:var(--bg3);}
+.menuitem .micheck{width:14px;text-align:center;color:var(--green);}
+.menuitem.disabled{opacity:.35;pointer-events:none;}
+.menusep{height:1px;background:var(--border);margin:4px 0;}
+.menukey{margin-left:auto;color:var(--text2);font-size:10px;padding-left:24px;}
+
+/* ── TEMA CHIARO ── */
+body.theme-light{background:#f5f5f5;color:#1a1a1a;}
+body.theme-light #menubar,
+body.theme-light #topbar,
+body.theme-light #rp{background:#e8eaed;border-color:#cbcfd6;color:#1a1a1a;}
+body.theme-light .tbl,
+body.theme-light .menubtn{color:#1a1a1a;}
+body.theme-light .menubtn:hover,
+body.theme-light .menubtn.open{background:#d2d6dc;}
+body.theme-light .menudrop{background:#fff;border-color:#cbcfd6;color:#1a1a1a;}
+body.theme-light .menuitem{color:#1a1a1a;}
+body.theme-light .menuitem:hover{background:#e8eaed;}
+body.theme-light .tbb,
+body.theme-light .tbn,
+body.theme-light .tbs,
+body.theme-light .save-btn,
+body.theme-light .load-btn{background:#fff;color:#1a1a1a;border-color:#cbcfd6;}
+body.theme-light #toolbar{background:#e8eaed;border-color:#cbcfd6;}
+body.theme-light #toolbar .tool{background:#fff;color:#1a1a1a;border-color:#cbcfd6;}
+body.theme-light #toolbar .tool.on{background:#cfe2ff;border-color:#0d6efd;color:#0d6efd;}
+body.theme-light #s-bar{background:#e8eaed;border-color:#cbcfd6;color:#1a1a1a;}
 </style>
 <script>/* jsPDF 2.5.1 embedded inline per funzionamento offline */
 /** @license
@@ -755,13 +797,37 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 <body>
 
 <!-- ── TOP BAR ── -->
+<!-- ── MENU BAR (in alto a sinistra, stile Windows) ── -->
+<div id="menubar">
+  <button class="menubtn" id="menu-file">File</button>
+  <button class="menubtn" id="menu-view">Visualizza</button>
+  <button class="menubtn" id="menu-updates">Aggiornamenti</button>
+</div>
+<!-- Dropdown del menu File -->
+<div class="menudrop" id="dd-file">
+  <div class="menuitem" data-mi="new"><span>📄</span><span>Nuovo</span><span class="menukey">Ctrl+N</span></div>
+  <div class="menuitem" data-mi="open"><span>📂</span><span>Apri…</span><span class="menukey">Ctrl+O</span></div>
+  <div class="menusep"></div>
+  <div class="menuitem" data-mi="save"><span>💾</span><span>Salva</span><span class="menukey">Ctrl+S</span></div>
+  <div class="menuitem" data-mi="saveas"><span>💾</span><span>Salva con nome…</span><span class="menukey">Ctrl+Maiusc+S</span></div>
+  <div class="menusep"></div>
+  <div class="menuitem" data-mi="export"><span>⬇</span><span>Esporta…</span></div>
+</div>
+<!-- Dropdown del menu Visualizza -->
+<div class="menudrop" id="dd-view">
+  <div class="menuitem" data-mi="theme-light"><span class="micheck" id="mi-check-light"></span><span>Sfondo Chiaro</span></div>
+  <div class="menuitem" data-mi="theme-dark"><span class="micheck" id="mi-check-dark">✓</span><span>Sfondo Scuro</span></div>
+</div>
+<!-- Dropdown del menu Aggiornamenti -->
+<div class="menudrop" id="dd-updates">
+  <div class="menuitem" data-mi="check-updates"><span>↻</span><span>Cerca aggiornamenti</span></div>
+</div>
+
 <div id="topbar">
   <span id="logo">CAD·2D</span>
   <div class="sep"></div>
   <button class="tbb" id="btn-undo">↩ Undo</button>
   <button class="tbb" id="btn-redo">↪ Redo</button>
-  <div class="sep"></div>
-  <button class="tbb" id="btn-del">🗑 Elimina</button>
   <div class="sep"></div>
   <span class="tbl">Unità:</span>
   <select class="tbs" id="sel-unit"><option value="mm">mm</option><option value="cm">cm</option></select>
@@ -1540,7 +1606,7 @@ const S={
   drawing:false, drawStart:null,
   ortho:true,
 
-  unit:'mm', gridMm:10, gridOn:true, showDims:'both',
+  unit:'mm', gridMm:10, gridOn:true, theme:'dark', showDims:'both',
   mScreen:{x:0,y:0}, mWorld:{x:0,y:0}, snapPt:null,
   shiftHeld:false,
   panning:false, panOrigin:null, panStart:null,
@@ -1831,7 +1897,7 @@ function redraw(){
   const dpr=S.dpr;
   const CW=cv.width/dpr,CH=cv.height/dpr;
   ctx.save();ctx.scale(dpr,dpr);
-  ctx.fillStyle='#0d1117';ctx.fillRect(0,0,CW,CH);
+  ctx.fillStyle=(S.theme==='light')?'#ffffff':'#0d1117';ctx.fillRect(0,0,CW,CH);
   drawGrid(CW,CH);
 
   // Riempimenti: disegnati SOTTO le linee/forme.
@@ -2247,14 +2313,20 @@ function drawGrid(W,H){
   const sy=Math.floor(br.y/g)*g,ey=Math.ceil(tl.y/g)*g;
   const maj=10;
   ctx.save();
+  // Colori griglia in base al tema
+  const isLight=S.theme==='light';
+  const gridMinor=isLight?'rgba(190,190,200,.55)':'rgba(48,54,61,.45)';
+  const gridMajor=isLight?'rgba(140,140,150,.65)':'rgba(48,54,61,.9)';
+  const axisCol  =isLight?'rgba(88,166,255,.35)':'rgba(88,166,255,.15)';
+  const labelCol =isLight?'rgba(80,80,90,.7)' :'rgba(139,148,158,.5)';
   // Linee della griglia + etichette: solo se la griglia è attiva.
   if(S.gridOn){
-    ctx.strokeStyle='rgba(48,54,61,.45)';ctx.lineWidth=.5;
+    ctx.strokeStyle=gridMinor;ctx.lineWidth=.5;
     ctx.beginPath();
     for(let x=sx;x<=ex;x+=g){const s=w2s(x,0);ctx.moveTo(s.x,0);ctx.lineTo(s.x,H);}
     for(let y=sy;y<=ey;y+=g){const s=w2s(0,y);ctx.moveTo(0,s.y);ctx.lineTo(W,s.y);}
     ctx.stroke();
-    ctx.strokeStyle='rgba(48,54,61,.9)';ctx.lineWidth=.8;
+    ctx.strokeStyle=gridMajor;ctx.lineWidth=.8;
     ctx.beginPath();
     for(let x=Math.ceil(sx/(g*maj))*(g*maj);x<=ex;x+=g*maj){const s=w2s(x,0);ctx.moveTo(s.x,0);ctx.lineTo(s.x,H);}
     for(let y=Math.ceil(sy/(g*maj))*(g*maj);y<=ey;y+=g*maj){const s=w2s(0,y);ctx.moveTo(0,s.y);ctx.lineTo(W,s.y);}
@@ -2262,10 +2334,10 @@ function drawGrid(W,H){
   }
   // Assi dell'origine: sempre visibili come riferimento.
   const O=w2s(0,0);
-  ctx.strokeStyle='rgba(88,166,255,.15)';ctx.lineWidth=1;
+  ctx.strokeStyle=axisCol;ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(O.x,0);ctx.lineTo(O.x,H);ctx.moveTo(0,O.y);ctx.lineTo(W,O.y);ctx.stroke();
   if(S.gridOn&&S.zoom>=.8){
-    ctx.fillStyle='rgba(139,148,158,.5)';ctx.font='10px Courier New';ctx.textAlign='left';
+    ctx.fillStyle=labelCol;ctx.font='10px Courier New';ctx.textAlign='left';
     const step=g*maj;
     const ox=Math.max(2,Math.min(O.x+3,W-50));
     const oy=Math.max(12,Math.min(O.y-2,H-4));
@@ -2283,7 +2355,10 @@ function drawGrid(W,H){
 
 function drawSeg(l,sel,trimHov){
   const s=w2s(l.x1,l.y1),e=w2s(l.x2,l.y2);
-  const baseColor=l.color||'#58a6ff';
+  let baseColor=l.color||'#58a6ff';
+  // Tema chiaro: il colore "bianco" di default delle linee viene reso nero
+  // per essere leggibile su sfondo bianco. Altri colori restano invariati.
+  if(S.theme==='light'&&(baseColor==='#ffffff'||baseColor==='#fff')) baseColor='#000000';
   const baseThick=l.thickness||1.5;
   ctx.save();
   ctx.strokeStyle=trimHov?'#ff7b72':sel?'#f0883e':baseColor;
@@ -2995,7 +3070,10 @@ function drawText(t,sel){
     ctx.strokeStyle='#f0883e';ctx.lineWidth=3;
     for(let i=0;i<lines.length;i++) ctx.strokeText(lines[i],sp.x,sp.y+i*lineH);
   }
-  ctx.fillStyle=t.color||'#c9d1d9';
+  // Tema chiaro: testo bianco di default → nero per leggibilità.
+  let textCol=t.color||'#c9d1d9';
+  if(S.theme==='light'&&(textCol==='#ffffff'||textCol==='#c9d1d9'||textCol==='#fff')) textCol='#000000';
+  ctx.fillStyle=textCol;
   for(let i=0;i<lines.length;i++) ctx.fillText(lines[i],sp.x,sp.y+i*lineH);
   // Selection crosshair dot all'origine (prima riga)
   if(sel){
@@ -6824,15 +6902,6 @@ document.getElementById('btn-ortho').addEventListener('click',toggleOrtho);
 document.getElementById('btn-undo').addEventListener('click',undo);
 document.getElementById('btn-redo').addEventListener('click',redo);
 
-document.getElementById('btn-del').addEventListener('click',()=>{
-  if(S.sel.size){
-    saveHist();
-    S.lines=S.lines.filter(l=>!S.sel.has(l.id));
-    S.texts=S.texts.filter(t=>!S.sel.has(t.id));
-    S.sel.clear();redraw();uiAll();
-  }
-});
-
 document.getElementById('btn-fit').addEventListener('click',()=>{
   const all=[...S.lines.flatMap(l=>[{x:l.x1,y:l.y1},{x:l.x2,y:l.y2}]),
              ...S.texts.map(t=>({x:t.x,y:t.y}))];
@@ -7087,6 +7156,124 @@ resize();
 setTool('line');
 uiAll();
 renderLayoutBar();
+
+// =====================================================================
+//  MENU BAR (File / Visualizza / Aggiornamenti)
+// =====================================================================
+const _menuMap={'menu-file':'dd-file','menu-view':'dd-view','menu-updates':'dd-updates'};
+function _closeAllMenus(){
+  for(const id of Object.values(_menuMap)) document.getElementById(id).classList.remove('show');
+  for(const id of Object.keys(_menuMap)) document.getElementById(id).classList.remove('open');
+}
+function _openMenu(btnId,ddId){
+  _closeAllMenus();
+  const btn=document.getElementById(btnId), dd=document.getElementById(ddId);
+  const r=btn.getBoundingClientRect();
+  dd.style.left=r.left+'px';
+  dd.style.top=(r.bottom+2)+'px';
+  dd.classList.add('show');
+  btn.classList.add('open');
+}
+for(const [btnId,ddId] of Object.entries(_menuMap)){
+  document.getElementById(btnId).addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const dd=document.getElementById(ddId);
+    if(dd.classList.contains('show')) _closeAllMenus();
+    else _openMenu(btnId,ddId);
+  });
+  document.getElementById(btnId).addEventListener('mouseenter',()=>{
+    // Se un menu è già aperto, hover su un altro bottone lo apre direttamente
+    const anyOpen=Object.values(_menuMap).some(id=>document.getElementById(id).classList.contains('show'));
+    if(anyOpen) _openMenu(btnId,ddId);
+  });
+}
+document.addEventListener('click',(e)=>{
+  if(!e.target.closest('.menudrop, .menubtn')) _closeAllMenus();
+});
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') _closeAllMenus(); });
+
+// Dispatch voci dei menu
+document.querySelectorAll('.menudrop .menuitem').forEach(item=>{
+  item.addEventListener('click',async()=>{
+    const a=item.dataset.mi;
+    _closeAllMenus();
+    if(a==='new')               await _menuFileNew();
+    else if(a==='open')         document.getElementById('btn-load').click();
+    else if(a==='save')         document.getElementById('btn-save').click();
+    else if(a==='saveas')       document.getElementById('btn-saveas').click();
+    else if(a==='export')       document.getElementById('exp-btn').click();
+    else if(a==='theme-light')  _applyTheme('light');
+    else if(a==='theme-dark')   _applyTheme('dark');
+    else if(a==='check-updates')await _menuCheckUpdates();
+  });
+});
+
+// File > Nuovo: chiede se salvare prima, poi resetta.
+async function _menuFileNew(){
+  const want=confirm('Vuoi salvare il progetto corrente prima di crearne uno nuovo?\n\nOK = salva prima\nAnnulla = procedi senza salvare');
+  if(want){
+    let saved=false;
+    try{
+      if(_currentProjectName){
+        saved=await saveBlobAs(_projectBlob(),_currentProjectName,
+          [{description:'Progetto CAD 2D',accept:{'application/json':['.cad2d']}}]);
+      } else {
+        const res=await saveProjectAs(null);
+        saved=!!res;
+      }
+    }catch(e){ alert('Errore salvataggio: '+e.message); return; }
+    if(!saved) return; // utente ha annullato il dialog Salva → annulla anche il "Nuovo"
+  }
+  // Reset progetto
+  saveHist();
+  S.lines=[];S.texts=[];S.indepDims=[];S.shapes=[];
+  S.sel.clear();S.drawing=false;S.textPending=false;
+  S.dimLinePt1=null;S.dimAngLine1=null;
+  S.nextId=1;
+  S.zoom=2;S.panX=0;S.panY=0;
+  S._layouts=[{name:'Layout 1',data:{
+    lines:[],texts:[],indepDims:[],shapes:[],nextId:1,zoom:2,panX:0,panY:0
+  }}];
+  S._activeLayout=0;
+  _currentProjectName=null;
+  renderLayoutBar();
+  redraw();uiAll();
+  document.getElementById('s-info').textContent='✓ Nuovo progetto pronto';
+  setTimeout(()=>document.getElementById('s-info').textContent='',2500);
+}
+
+// Visualizza > Sfondo Chiaro / Scuro
+function _applyTheme(theme){
+  S.theme=theme;
+  document.body.classList.toggle('theme-light',theme==='light');
+  // Cambia il colore di default solo se era il "default opposto" del tema
+  if(theme==='light'&&S.curColor==='#ffffff'){S.curColor='#000000';document.getElementById('inp-color').value='#000000';}
+  if(theme==='dark' &&S.curColor==='#000000'){S.curColor='#ffffff';document.getElementById('inp-color').value='#ffffff';}
+  document.getElementById('mi-check-light').textContent=theme==='light'?'✓':'';
+  document.getElementById('mi-check-dark') .textContent=theme==='dark' ?'✓':'';
+  try{localStorage.setItem('cad2d.theme',theme);}catch(e){}
+  redraw();
+}
+// Ripristina il tema salvato
+try{
+  const saved=localStorage.getItem('cad2d.theme');
+  if(saved==='light'||saved==='dark') _applyTheme(saved);
+  else _applyTheme('dark');
+}catch(e){ _applyTheme('dark'); }
+
+// Aggiornamenti > Cerca aggiornamenti
+async function _menuCheckUpdates(){
+  if(!window.electronAPI||!window.electronAPI.checkForUpdates){
+    alert('Il controllo aggiornamenti è disponibile solo nell\'app desktop installata.');
+    return;
+  }
+  document.getElementById('s-info').textContent='Controllo aggiornamenti in corso...';
+  try{ await window.electronAPI.checkForUpdates(); }catch(e){}
+  setTimeout(()=>{
+    const el=document.getElementById('s-info');
+    if(el.textContent.startsWith('Controllo')) el.textContent='';
+  },3000);
+}
 </script>
 </body>
 </html>

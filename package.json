@@ -1,6 +1,6 @@
 {
   "name": "cad2d",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CAD 2D - applicazione di disegno tecnico 2D",
   "main": "main.js",
   "author": "Stefano",
@@ -22,6 +22,7 @@
     },
     "files": [
       "main.js",
+      "preload.js",
       "renderer/**"
     ],
     "win": {

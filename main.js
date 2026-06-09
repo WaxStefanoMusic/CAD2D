@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
@@ -6,6 +6,7 @@ const path = require('path');
 // app.disableHardwareAcceleration();
 
 let mainWindow = null;
+let _manualUpdateCheck = false;
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -15,12 +16,12 @@ function createWindow() {
     minHeight: 600,
     show: false,                     // mostra solo dopo aver massimizzato (evita flicker)
     backgroundColor: '#0d1117',
-    autoHideMenuBar: true,           // niente barra menu (premi Alt per mostrarla)
+    autoHideMenuBar: true,           // niente barra menu di sistema (Alt per mostrarla)
     title: 'CAD 2D',
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      // File System Access API (showSaveFilePicker) funziona perche' file:// e' secure context.
+      preload: path.join(__dirname, 'preload.js'),
       spellcheck: false
     }
   });
@@ -46,19 +47,13 @@ function createWindow() {
 
 // ======================================================================
 //  AGGIORNAMENTI AUTOMATICI (electron-updater + GitHub Releases)
-//  - All'avvio controlla la repo pubblica CAD2D-releases.
-//  - Se trova una versione superiore: dialog nativo "Vuoi aggiornare?"
-//  - In caso affermativo scarica l'installer in background e, a download
-//    completato, chiede "Installa ora" (chiude e riavvia con la nuova versione).
 // ======================================================================
 function setupAutoUpdater() {
-  // Niente verifica codice (l'installer non e' firmato): autoUpdater dei
-  // pacchetti NSIS non firmati funziona comunque scaricando l'exe e
-  // rilanciandolo come fa un installer normale.
-  autoUpdater.autoDownload = false;       // chiediamo conferma prima di scaricare
+  autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on('update-available', (info) => {
+    _manualUpdateCheck = false;
     dialog.showMessageBox(mainWindow || undefined, {
       type: 'info',
       buttons: ['Scarica e installa', 'Più tardi'],
@@ -72,19 +67,37 @@ function setupAutoUpdater() {
     });
   });
 
-  autoUpdater.on('update-not-available', () => {
-    // silenzioso (non disturba l'utente quando e' gia' aggiornato)
+  autoUpdater.on('update-not-available', (info) => {
+    if (_manualUpdateCheck) {
+      _manualUpdateCheck = false;
+      dialog.showMessageBox(mainWindow || undefined, {
+        type: 'info',
+        buttons: ['OK'],
+        title: 'Aggiornamenti',
+        message: 'Sei già alla versione più recente.',
+        detail: `Versione installata: ${app.getVersion()}`
+      });
+    }
   });
 
   autoUpdater.on('error', (err) => {
-    // niente alert: errori di rete o nessuna release ancora pubblicata.
-    console.warn('[updater]', err && err.message);
+    const msg = (err && err.message) || String(err);
+    if (_manualUpdateCheck) {
+      _manualUpdateCheck = false;
+      dialog.showMessageBox(mainWindow || undefined, {
+        type: 'warning',
+        buttons: ['OK'],
+        title: 'Errore controllo aggiornamenti',
+        message: 'Impossibile verificare gli aggiornamenti.',
+        detail: msg
+      });
+    } else {
+      console.warn('[updater]', msg);
+    }
   });
 
   autoUpdater.on('download-progress', (p) => {
-    if (mainWindow) {
-      mainWindow.setProgressBar(Math.max(0, Math.min(1, p.percent / 100)));
-    }
+    if (mainWindow) mainWindow.setProgressBar(Math.max(0, Math.min(1, p.percent / 100)));
   });
 
   autoUpdater.on('update-downloaded', () => {
@@ -102,17 +115,36 @@ function setupAutoUpdater() {
     });
   });
 
-  // Controlla subito all'avvio (silenziosamente: l'utente vede il dialog
-  // SOLO se c'e' davvero un aggiornamento).
+  // Controllo automatico all'avvio (silenzioso).
   autoUpdater.checkForUpdates().catch(() => {});
 }
 
-app.whenReady().then(() => {
-  Menu.setApplicationMenu(null); // nessun menu applicazione di default
-  createWindow();
+// IPC: il renderer chiama questa quando l'utente clicca "Aggiornamenti".
+ipcMain.handle('check-for-updates', async () => {
+  if (!app.isPackaged) {
+    dialog.showMessageBox(mainWindow || undefined, {
+      type: 'info',
+      buttons: ['OK'],
+      title: 'Aggiornamenti',
+      message: 'Controllo aggiornamenti disabilitato in modalità sviluppo.'
+    });
+    return { ok: true, dev: true };
+  }
+  _manualUpdateCheck = true;
+  try {
+    await autoUpdater.checkForUpdates();
+    return { ok: true };
+  } catch (e) {
+    _manualUpdateCheck = false;
+    return { ok: false, error: e.message };
+  }
+});
 
-  // Avvia il controllo aggiornamenti solo quando l'app e' confezionata
-  // (in sviluppo non c'e' alcun installer da scaricare).
+ipcMain.handle('get-app-version', () => app.getVersion());
+
+app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
+  createWindow();
   if (app.isPackaged) setupAutoUpdater();
 
   app.on('activate', () => {
