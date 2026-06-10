@@ -4,7 +4,7 @@ Applicazione desktop di disegno tecnico 2D, basata su Electron.
 
 Questa è la repo del **sorgente** (privata). Gli installer pubblici per il download
 si trovano nella repo separata:
-**https://github.com/WaxStefanoMusic/CAD2D-releases**
+**https://github.com/WaxStefanoMusic/CAD2D-Releases**
 
 ## Sviluppo
 
@@ -17,6 +17,6 @@ npm run release    # build + pubblica nuova Release su GitHub (auto-update)
 
 ## Aggiornamenti automatici
 
-L'app installata controlla la repo `CAD2D-releases` all'avvio. Quando trova una
+L'app installata controlla la repo `CAD2D-Releases` all'avvio. Quando trova una
 versione superiore alla propria, mostra una finestra di dialogo nativa e propone
 di scaricare e installare il nuovo installer.
