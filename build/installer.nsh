@@ -23,3 +23,17 @@
 !macro customInit
   StrCpy $INSTDIR "$PROGRAMFILES64\CAD 2D"
 !macroend
+
+; Dopo install/update: Windows cache le icone degli .exe per path. Quando
+; auto-updater sovrascrive l'exe, Explorer/Taskbar/StartMenu continuano a
+; mostrare la vecchia icona finche' non si fa logout. Forziamo il refresh
+; chiudendo Explorer, eliminando le cache .db e riavviandolo (~2 sec di
+; blip della taskbar — accettabile durante un update).
+!macro customInstall
+  nsExec::Exec 'taskkill /f /im explorer.exe'
+  Sleep 400
+  Delete "$LOCALAPPDATA\IconCache.db"
+  Delete "$LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache_*.db"
+  Delete "$LOCALAPPDATA\Microsoft\Windows\Explorer\thumbcache_*.db"
+  Exec '"$WINDIR\explorer.exe"'
+!macroend
