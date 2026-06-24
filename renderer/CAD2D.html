@@ -1853,11 +1853,22 @@ function applyOrtho(sx,sy,wx,wy){
 // =====================================================================
 // HISTORY  (serialises lines + texts together)
 // =====================================================================
+// Lo snapshot è posticipato a fine tick: i call-site usano il pattern
+// "saveHist(); ...mutazioni..." quindi lo snapshot DEVE includere le
+// mutazioni che seguono. Inoltre più chiamate ravvicinate (es. operazioni
+// composite) si fondono in un singolo snapshot, evitando che un Ctrl+Z
+// torni indietro "di due azioni".
+let _histPending=false;
 function saveHist(){
-  S.history=S.history.slice(0,S.histIdx+1);
-  S.history.push(JSON.stringify({lines:S.lines,texts:S.texts,indepDims:S.indepDims,shapes:S.shapes}));
-  if(S.history.length>200) S.history.shift();
-  S.histIdx=S.history.length-1;
+  if(_histPending) return;
+  _histPending=true;
+  queueMicrotask(()=>{
+    _histPending=false;
+    S.history=S.history.slice(0,S.histIdx+1);
+    S.history.push(JSON.stringify({lines:S.lines,texts:S.texts,indepDims:S.indepDims,shapes:S.shapes}));
+    if(S.history.length>200) S.history.shift();
+    S.histIdx=S.history.length-1;
+  });
 }
 function undo(){
   if(S.histIdx<=0) return;

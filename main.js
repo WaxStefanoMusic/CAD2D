@@ -18,6 +18,7 @@ function createWindow() {
     backgroundColor: '#0d1117',
     autoHideMenuBar: true,           // niente barra menu di sistema (Alt per mostrarla)
     title: 'CAD 2D',
+    icon: path.join(__dirname, 'build', 'icon.ico'),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
